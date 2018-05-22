@@ -14,46 +14,41 @@ class FileInput extends React.Component {
 
     this.handleFiles = this.handleFiles.bind(this);
     this.splitLines = this.splitLines.bind(this);
-    this.callCSVconverter = this.callCSVconverter.bind(this);
   }
 
   handleFiles = file => {
     let reader = new FileReader();
     reader.onload = file => {
-      this.setState(Object.assign({}, this.state, { file: reader.result }));
+      var split = reader.result.split("\n");
+      var linesArray = this.splitLines(split).slice(1);
+      this.csvToArray(linesArray);
     };
     reader.readAsText(file.target.files[0]);
-    var split = this.state.file.split("\n");
-    var linesArray = this.splitLines(split).slice(1);
-    this.callCSVconverter(linesArray);
   };
 
   splitLines = arr => {
     return arr.map(val => val.split(","));
   };
 
-  callCSVconverter(incoming) {
-    var split = this.state.file.split("\n");
-    var linesArray = this.splitLines(split).slice(1);
-    var csvArray = this.csvToArray(incoming);
-    this.setState(Object.assign({}, this.state, { data: csvArray }));
-  }
-
   csvToArray = twoDimArr => {
-    console.log("*****", twoDimArr);
-    let arr = twoDimArr[0].map((_, idx) => {
-      let obj = {};
+    var result = twoDimArr[0].map((_, idx) => {
+      let arr = [];
+      let total = 0;
       for (let x = 1; x < twoDimArr.length; x++) {
-        obj.name = twoDimArr[x][0];
-        obj.value = twoDimArr[x][idx + 1];
-        obj.header = twoDimArr[0][idx + 1];
+        arr.push({
+          name: twoDimArr[x][0],
+          value: parseInt(twoDimArr[x][idx + 1]),
+          header: twoDimArr[0][idx + 1]
+        });
+        total += parseInt(twoDimArr[x][idx + 1]);
       }
-      return obj;
+      arr.push({ total: total, header: twoDimArr[0][idx + 1] });
+      return arr;
     });
+    this.setState(Object.assign({}, this.state, { data: result }));
   };
 
   render() {
-    console.log(this.state.data);
     return (
       <div className="file-input-container">
         <input type="file" onChange={this.handleFiles} accept=".csv" />
